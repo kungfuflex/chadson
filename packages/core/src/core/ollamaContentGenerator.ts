@@ -101,10 +101,15 @@ export class OllamaContentGenerator implements ContentGenerator {
   private baseUrl: string;
   private model: string;
 
-  constructor(baseUrl: string = 'http://localhost:11434', model: string = 'gemma2:27b') {
+  constructor(
+    baseUrl: string = 'http://localhost:11434',
+    model: string = 'gemma2:27b',
+  ) {
     this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
     this.model = model;
-    debugLogger.log(`OllamaContentGenerator initialized: ${this.baseUrl} with model ${this.model}`);
+    debugLogger.log(
+      `OllamaContentGenerator initialized: ${this.baseUrl} with model ${this.model}`,
+    );
   }
 
   /**
@@ -128,7 +133,7 @@ export class OllamaContentGenerator implements ContentGenerator {
       } else if ('text' in systemInstruction) {
         systemText = systemInstruction.text || '';
       }
-      
+
       if (systemText) {
         messages.push({ role: 'system', content: systemText });
       }
@@ -136,9 +141,10 @@ export class OllamaContentGenerator implements ContentGenerator {
 
     // Convert content history
     for (const content of contents) {
-      const role = content.role === 'model' ? 'assistant' : content.role as 'user';
+      const role =
+        content.role === 'model' ? 'assistant' : (content.role as 'user');
       const text = this.partsToText(content.parts || []);
-      
+
       if (text) {
         messages.push({ role, content: text });
       }
@@ -174,18 +180,22 @@ export class OllamaContentGenerator implements ContentGenerator {
         // Format function response as text result
         const response = part.functionResponse.response;
         let responseText = '';
-        
+
         if (response && typeof response === 'object') {
           if ('llmContent' in response) {
-            responseText = String((response as Record<string, unknown>)['llmContent']);
+            responseText = String(
+              (response as Record<string, unknown>)['llmContent'],
+            );
           } else {
             responseText = JSON.stringify(response);
           }
         } else if (response) {
           responseText = String(response);
         }
-        
-        textParts.push(`\nTool "${part.functionResponse.name}" returned:\n${responseText}\n`);
+
+        textParts.push(
+          `\nTool "${part.functionResponse.name}" returned:\n${responseText}\n`,
+        );
       } else if (part.inlineData) {
         textParts.push(`[Inline data: ${part.inlineData.mimeType}]`);
       } else if (part.fileData) {
@@ -208,7 +218,10 @@ export class OllamaContentGenerator implements ContentGenerator {
     }
 
     const firstTool = tools[0];
-    if (!('functionDeclarations' in firstTool) || !firstTool.functionDeclarations) {
+    if (
+      !('functionDeclarations' in firstTool) ||
+      !firstTool.functionDeclarations
+    ) {
       return systemInstruction;
     }
 
@@ -283,7 +296,7 @@ IMPORTANT:
           args: parsed.tool_call.arguments || {},
         };
       }
-    } catch (e) {
+    } catch (_e) {
       // Not a valid JSON or tool call, return null
     }
 
@@ -299,17 +312,22 @@ IMPORTANT:
   ): GenerateContentResponse {
     const choice = ollamaResponse.choices[0];
     const content = choice.message.content;
-    
-    debugLogger.log(`[OllamaContentGenerator] Converting response. Tools available: ${!!tools}, Tools length: ${tools?.length}`);
-    
+
+    debugLogger.log(
+      `[OllamaContentGenerator] Converting response. Tools available: ${!!tools}, Tools length: ${tools?.length}`,
+    );
+
     // Check if this is a tool call
-    const hasTools = tools && tools.length > 0 && 'functionDeclarations' in tools[0];
+    const hasTools =
+      tools && tools.length > 0 && 'functionDeclarations' in tools[0];
     const toolCall = hasTools ? this.parseToolCall(content) : null;
-    
-    debugLogger.log(`[OllamaContentGenerator] hasTools: ${hasTools}, toolCall: ${toolCall ? toolCall.name : 'null'}`);
+
+    debugLogger.log(
+      `[OllamaContentGenerator] hasTools: ${hasTools}, toolCall: ${toolCall ? toolCall.name : 'null'}`,
+    );
 
     const parts: Part[] = [];
-    
+
     if (toolCall) {
       // This is a tool call
       parts.push({ functionCall: toolCall });
@@ -347,7 +365,7 @@ IMPORTANT:
 
   async generateContent(
     request: GenerateContentParameters,
-    userPromptId: string,
+    _userPromptId: string,
   ): Promise<GenerateContentResponse> {
     const systemInstruction = request.config?.systemInstruction;
     let systemText = '';
@@ -371,7 +389,7 @@ IMPORTANT:
     }
 
     // Ensure contents is an array
-    const contents = normalizeContents(request.contents);
+    const contents = normalizeContents(_request.contents);
     const messages = this.convertToOllamaMessages(contents, systemText);
 
     const ollamaRequest = {
@@ -382,7 +400,9 @@ IMPORTANT:
       max_tokens: request.config?.maxOutputTokens,
     };
 
-    debugLogger.log(`Ollama request: ${JSON.stringify(ollamaRequest, null, 2)}`);
+    debugLogger.log(
+      `Ollama request: ${JSON.stringify(ollamaRequest, null, 2)}`,
+    );
 
     const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
       method: 'POST',
@@ -399,21 +419,23 @@ IMPORTANT:
     }
 
     const ollamaResponse: OllamaCompletionResponse = await response.json();
-    debugLogger.log(`Ollama response: ${JSON.stringify(ollamaResponse, null, 2)}`);
+    debugLogger.log(
+      `Ollama response: ${JSON.stringify(ollamaResponse, null, 2)}`,
+    );
 
     return this.convertToGeminiResponse(ollamaResponse, tools);
   }
 
   async generateContentStream(
     request: GenerateContentParameters,
-    userPromptId: string,
+    _userPromptId: string,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
     return this.generateContentStreamInternal(request, userPromptId);
   }
 
   private async *generateContentStreamInternal(
     request: GenerateContentParameters,
-    userPromptId: string,
+    _userPromptId: string,
   ): AsyncGenerator<GenerateContentResponse> {
     const systemInstruction = request.config?.systemInstruction;
     let systemText = '';
@@ -437,7 +459,7 @@ IMPORTANT:
     }
 
     // Ensure contents is an array
-    const contents = normalizeContents(request.contents);
+    const contents = normalizeContents(_request.contents);
     const messages = this.convertToOllamaMessages(contents, systemText);
 
     const ollamaRequest = {
@@ -471,7 +493,7 @@ IMPORTANT:
     const decoder = new TextDecoder();
     let buffer = '';
     let accumulatedText = '';
-    let tokenCounts = { prompt: 0, completion: 0, total: 0 };
+    const tokenCounts = { prompt: 0, completion: 0, total: 0 };
 
     try {
       while (true) {
@@ -490,10 +512,10 @@ IMPORTANT:
             try {
               const chunk: OllamaStreamChunk = JSON.parse(data);
               const delta = chunk.choices[0]?.delta;
-              
+
               if (delta?.content) {
                 accumulatedText += delta.content;
-                
+
                 yield {
                   candidates: [
                     {
@@ -501,9 +523,11 @@ IMPORTANT:
                         role: 'model',
                         parts: [{ text: delta.content }],
                       },
-                      finishReason: chunk.choices[0].finish_reason ? 
-                        (chunk.choices[0].finish_reason === 'length' ? FinishReason.MAX_TOKENS : FinishReason.STOP) :
-                        undefined,
+                      finishReason: chunk.choices[0].finish_reason
+                        ? chunk.choices[0].finish_reason === 'length'
+                          ? FinishReason.MAX_TOKENS
+                          : FinishReason.STOP
+                        : undefined,
                       index: 0,
                     },
                   ],
@@ -512,8 +536,13 @@ IMPORTANT:
 
               // On finish, check for tool calls
               if (chunk.choices[0]?.finish_reason) {
-                const hasTools = tools && tools.length > 0 && 'functionDeclarations' in tools[0];
-                const toolCall = hasTools ? this.parseToolCall(accumulatedText) : null;
+                const hasTools =
+                  tools &&
+                  tools.length > 0 &&
+                  'functionDeclarations' in tools[0];
+                const toolCall = hasTools
+                  ? this.parseToolCall(accumulatedText)
+                  : null;
 
                 if (toolCall) {
                   // Replace the accumulated text with a function call
@@ -536,7 +565,7 @@ IMPORTANT:
                   } as GenerateContentResponse;
                 }
               }
-            } catch (e) {
+            } catch (_e) {
               debugLogger.log(`Error parsing SSE chunk: ${e}`);
             }
           }
@@ -547,10 +576,12 @@ IMPORTANT:
     }
   }
 
-  async countTokens(request: CountTokensParameters): Promise<CountTokensResponse> {
+  async countTokens(
+    _request: CountTokensParameters,
+  ): Promise<CountTokensResponse> {
     // Ollama doesn't have a direct token counting API
     // We'll estimate based on text length: ~4 chars per token
-    const contents = normalizeContents(request.contents);
+    const contents = normalizeContents(_request.contents);
     const allParts = contents.flatMap((c: Content) => c.parts || []);
     const text = this.partsToText(allParts);
     const estimatedTokens = Math.ceil(text.length / 4);
@@ -561,7 +592,7 @@ IMPORTANT:
   }
 
   async embedContent(
-    request: EmbedContentParameters,
+    _request: EmbedContentParameters,
   ): Promise<EmbedContentResponse> {
     throw new Error('Ollama embedContent not implemented');
   }
