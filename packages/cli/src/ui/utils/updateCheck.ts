@@ -4,15 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import latestVersion from 'latest-version';
+// CHADSON: Disabled imports for auto-update (unused in fork)
+// import latestVersion from 'latest-version';
 import semver from 'semver';
-import { getPackageJson, debugLogger } from '@google/gemini-cli-core';
+// import { getPackageJson, debugLogger } from '@google/gemini-cli-core';
+import { debugLogger } from '@google/gemini-cli-core';
 import type { LoadedSettings } from '../../config/settings.js';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+// import { fileURLToPath } from 'node:url';
+// import path from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 export const FETCH_TIMEOUT_MS = 2000;
 
@@ -32,7 +34,9 @@ export interface UpdateObject {
 /**
  * From a nightly and stable version, determines which is the "best" one to offer.
  * The rule is to always prefer nightly if the base versions are the same.
+ * CHADSON: Disabled for fork
  */
+/* 
 function getBestAvailableUpdate(
   nightly?: string,
   stable?: string,
@@ -46,11 +50,16 @@ function getBestAvailableUpdate(
 
   return semver.gt(stable, nightly) ? stable : nightly;
 }
+*/
 
 export async function checkForUpdates(
-  settings: LoadedSettings,
+  _settings: LoadedSettings,
 ): Promise<UpdateObject | null> {
   try {
+    // CHADSON: Disable all update checks for local fork
+    return null;
+    
+    /* Original update check code disabled
     if (settings.merged.general?.disableUpdateNag) {
       return null;
     }
@@ -106,6 +115,7 @@ export async function checkForUpdates(
     }
 
     return null;
+    */
   } catch (e) {
     debugLogger.warn('Failed to check for updates: ' + e);
     return null;

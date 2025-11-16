@@ -6,19 +6,29 @@
 
 import type { UpdateObject } from '../ui/utils/updateCheck.js';
 import type { LoadedSettings } from '../config/settings.js';
-import { getInstallationInfo, PackageManager } from './installationInfo.js';
+// CHADSON: Disabled imports for auto-update (unused in fork)
+// import { getInstallationInfo, PackageManager } from './installationInfo.js';
 import { updateEventEmitter } from './updateEventEmitter.js';
 import type { HistoryItem } from '../ui/types.js';
 import { MessageType } from '../ui/types.js';
-import { spawnWrapper } from './spawnWrapper.js';
+// import { spawnWrapper } from './spawnWrapper.js';
 import type { spawn } from 'node:child_process';
 
 export function handleAutoUpdate(
   info: UpdateObject | null,
   settings: LoadedSettings,
   projectRoot: string,
-  spawnFn: typeof spawn = spawnWrapper,
+  spawnFn?: typeof spawn, // CHADSON: Made optional since unused
 ) {
+  // CHADSON: Disable auto-update for local fork
+  // Suppress unused parameter warnings
+  void info;
+  void settings;
+  void projectRoot;
+  void spawnFn;
+  return;
+  
+  /* Original auto-update code disabled
   if (!info) {
     return;
   }
@@ -93,6 +103,7 @@ export function handleAutoUpdate(
     });
   });
   return updateProcess;
+  */
 }
 
 export function setUpdateHandler(

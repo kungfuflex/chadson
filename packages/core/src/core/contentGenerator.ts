@@ -22,6 +22,7 @@ import { LoggingContentGenerator } from './loggingContentGenerator.js';
 import { InstallationManager } from '../utils/installationManager.js';
 import { FakeContentGenerator } from './fakeContentGenerator.js';
 import { RecordingContentGenerator } from './recordingContentGenerator.js';
+import { OllamaContentGenerator } from './ollamaContentGenerator.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -50,6 +51,7 @@ export enum AuthType {
   USE_VERTEX_AI = 'vertex-ai',
   LEGACY_CLOUD_SHELL = 'cloud-shell',
   COMPUTE_ADC = 'compute-default-credentials',
+  USE_OLLAMA = 'ollama',
 }
 
 export type ContentGeneratorConfig = {
@@ -57,6 +59,8 @@ export type ContentGeneratorConfig = {
   vertexai?: boolean;
   authType?: AuthType;
   proxy?: string;
+  ollamaBaseUrl?: string;
+  ollamaModel?: string;
 };
 
 export async function createContentGeneratorConfig(
@@ -71,10 +75,14 @@ export async function createContentGeneratorConfig(
     process.env['GOOGLE_CLOUD_PROJECT_ID'] ||
     undefined;
   const googleCloudLocation = process.env['GOOGLE_CLOUD_LOCATION'] || undefined;
+  const ollamaBaseUrl = process.env['OLLAMA_BASE_URL'] || 'http://localhost:11434';
+  const ollamaModel = process.env['OLLAMA_MODEL'] || 'gemma2:27b';
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     authType,
     proxy: config?.getProxy(),
+    ollamaBaseUrl,
+    ollamaModel,
   };
 
   // If we are using Google auth or we are in Cloud Shell, there is nothing else to validate for now
@@ -82,6 +90,10 @@ export async function createContentGeneratorConfig(
     authType === AuthType.LOGIN_WITH_GOOGLE ||
     authType === AuthType.COMPUTE_ADC
   ) {
+    return contentGeneratorConfig;
+  }
+
+  if (authType === AuthType.USE_OLLAMA) {
     return contentGeneratorConfig;
   }
 
@@ -119,6 +131,17 @@ export async function createContentGenerator(
     const baseHeaders: Record<string, string> = {
       'User-Agent': userAgent,
     };
+
+    if (config.authType === AuthType.USE_OLLAMA) {
+      return new LoggingContentGenerator(
+        new OllamaContentGenerator(
+          config.ollamaBaseUrl || 'http://localhost:11434',
+          config.ollamaModel || 'gemma2:27b',
+        ),
+        gcConfig,
+      );
+    }
+
     if (
       config.authType === AuthType.LOGIN_WITH_GOOGLE ||
       config.authType === AuthType.COMPUTE_ADC

@@ -16,6 +16,11 @@ export function validateAuthMethod(authMethod: string): string | null {
     return null;
   }
 
+  if (authMethod === AuthType.USE_OLLAMA) {
+    // Ollama doesn't require authentication, just needs to be running
+    return null;
+  }
+
   if (authMethod === AuthType.USE_GEMINI) {
     return null;
   }

@@ -1,5 +1,5 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "chadson",
   "version": "0.17.0-nightly.20251114.0fcbff506",
   "engines": {
     "node": ">=20.0.0"
@@ -69,6 +69,7 @@
     }
   },
   "bin": {
+    "chadson": "bundle/gemini.js",
     "gemini": "bundle/gemini.js"
   },
   "files": [

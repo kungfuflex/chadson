@@ -31,6 +31,10 @@ export function validateAuthMethodWithSettings(
   if (authType === AuthType.USE_GEMINI) {
     return null;
   }
+  // If using Ollama, no additional validation needed
+  if (authType === AuthType.USE_OLLAMA) {
+    return null;
+  }
   return validateAuthMethod(authType);
 }
 
