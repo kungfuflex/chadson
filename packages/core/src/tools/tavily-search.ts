@@ -225,7 +225,7 @@ class TavilySearchToolInvocation extends BaseToolInvocation<
         returnDisplay: `Search error: ${errorMessage}`,
         error: {
           message: errorMessage,
-          type: ToolErrorType.TOOL_EXECUTION_ERROR,
+          type: ToolErrorType.EXECUTION_FAILED,
         },
       };
     }
@@ -243,14 +243,14 @@ export class TavilySearchTool extends BaseDeclarativeTool<
   static readonly Name = TAVILY_TOOL_NAME;
 
   constructor(
-    private config: Config,
+    _config: Config,
     messageBus?: MessageBus,
   ) {
     super(
       TAVILY_TOOL_NAME,
       TAVILY_TOOL_NAME,
       'Search the web using Tavily API. Returns relevant, up-to-date search results with content snippets and direct answers. Requires TAVILY_API_KEY environment variable.',
-      'other',
+      'other' as any,
       {
         type: 'object',
         properties: {
@@ -294,6 +294,8 @@ export class TavilySearchTool extends BaseDeclarativeTool<
         },
         required: ['query'],
       },
+      true,
+      false,
       messageBus,
     );
   }

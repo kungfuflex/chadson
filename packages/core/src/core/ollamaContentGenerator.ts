@@ -389,7 +389,7 @@ IMPORTANT:
     }
 
     // Ensure contents is an array
-    const contents = normalizeContents(_request.contents);
+    const contents = normalizeContents(request.contents);
     const messages = this.convertToOllamaMessages(contents, systemText);
 
     const ollamaRequest = {
@@ -430,7 +430,7 @@ IMPORTANT:
     request: GenerateContentParameters,
     _userPromptId: string,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
-    return this.generateContentStreamInternal(request, userPromptId);
+    return this.generateContentStreamInternal(request, _userPromptId);
   }
 
   private async *generateContentStreamInternal(
@@ -459,7 +459,7 @@ IMPORTANT:
     }
 
     // Ensure contents is an array
-    const contents = normalizeContents(_request.contents);
+    const contents = normalizeContents(request.contents);
     const messages = this.convertToOllamaMessages(contents, systemText);
 
     const ollamaRequest = {
@@ -566,7 +566,7 @@ IMPORTANT:
                 }
               }
             } catch (_e) {
-              debugLogger.log(`Error parsing SSE chunk: ${e}`);
+              debugLogger.log(`Error parsing SSE chunk: ${_e}`);
             }
           }
         }
@@ -577,11 +577,11 @@ IMPORTANT:
   }
 
   async countTokens(
-    _request: CountTokensParameters,
+    request: CountTokensParameters,
   ): Promise<CountTokensResponse> {
     // Ollama doesn't have a direct token counting API
     // We'll estimate based on text length: ~4 chars per token
-    const contents = normalizeContents(_request.contents);
+    const contents = normalizeContents(request.contents);
     const allParts = contents.flatMap((c: Content) => c.parts || []);
     const text = this.partsToText(allParts);
     const estimatedTokens = Math.ceil(text.length / 4);
@@ -592,7 +592,7 @@ IMPORTANT:
   }
 
   async embedContent(
-    _request: EmbedContentParameters,
+    request: EmbedContentParameters,
   ): Promise<EmbedContentResponse> {
     throw new Error('Ollama embedContent not implemented');
   }
