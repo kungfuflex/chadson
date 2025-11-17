@@ -1,33 +1,42 @@
 # Chadson (Fork of Gemini CLI)
 
-> **Note:** This is a fork of [Google's Gemini CLI](https://github.com/google-gemini/gemini-cli) that has been modified to work with local Ollama models.
+> **Note:** This is a fork of
+> [Google's Gemini CLI](https://github.com/google-gemini/gemini-cli) that has
+> been modified to work with local Ollama models.
 
 [![License](https://img.shields.io/github/license/google-gemini/gemini-cli)](https://github.com/google-gemini/gemini-cli/blob/main/LICENSE)
 
 ![Gemini CLI Screenshot](./docs/assets/gemini-screenshot.png)
 
-**Chadson** is an open-source AI agent that runs **100% locally** using [Ollama](https://ollama.com). It's based on Google's Gemini CLI but adapted to work with larger language models that don't natively support tool calling through **prompt-based tool calling**.
+**Chadson** is an open-source AI agent that runs **100% locally** using
+[Ollama](https://ollama.com). It's based on Google's Gemini CLI but adapted to
+work with larger language models that don't natively support tool calling
+through **prompt-based tool calling**.
 
 ## 🆚 Chadson vs Gemini CLI
 
-| Feature | Gemini CLI (Original) | Chadson (This Fork) |
-|---------|----------------------|---------------------|
-| **Backend** | Google Gemini API | Local Ollama |
-| **Privacy** | Cloud-based | 100% Local |
-| **Cost** | API key required (free tier) | Completely free |
-| **Models** | Gemini 2.5 Pro/Flash | gemma2:27b, llama3.1, etc. |
-| **Tool Calling** | Native Gemini tools | Prompt-based tool calling |
-| **Web Search** | google_web_search (Gemini grounding) | tavily_search (API-based) |
-| **Setup** | Google account/API key | Just install Ollama |
+| Feature          | Gemini CLI (Original)                | Chadson (This Fork)        |
+| ---------------- | ------------------------------------ | -------------------------- |
+| **Backend**      | Google Gemini API                    | Local Ollama               |
+| **Privacy**      | Cloud-based                          | 100% Local                 |
+| **Cost**         | API key required (free tier)         | Completely free            |
+| **Models**       | Gemini 2.5 Pro/Flash                 | gemma2:27b, llama3.1, etc. |
+| **Tool Calling** | Native Gemini tools                  | Prompt-based tool calling  |
+| **Web Search**   | google_web_search (Gemini grounding) | tavily_search (API-based)  |
+| **Setup**        | Google account/API key               | Just install Ollama        |
 
 ## 🚀 Why Chadson?
 
-- **🔒 100% Local**: All processing happens on your machine - no cloud dependencies
+- **🔒 100% Local**: All processing happens on your machine - no cloud
+  dependencies
 - **💰 Completely Free**: No API keys, no quotas, no usage limits
-- **🧠 Powerful Models**: Works with gemma2:27b, llama3.1, and other large models
+- **🧠 Powerful Models**: Works with gemma2:27b, llama3.1, and other large
+  models
 - **🔧 Built-in Tools**: File operations, shell commands, web search via Tavily
-- **🎯 Prompt-Based Tool Calling**: Innovative approach for models without native tool support
-- **🌐 Real Web Search**: Tavily integration for live web results (requires free API key)
+- **🎯 Prompt-Based Tool Calling**: Innovative approach for models without
+  native tool support
+- **🌐 Real Web Search**: Tavily integration for live web results (requires free
+  API key)
 - **🔌 Extensible**: Same MCP (Model Context Protocol) support as Gemini CLI
 - **💻 Terminal-first**: Designed for developers who live in the command line
 - **🛡️ Open source**: Apache 2.0 licensed
@@ -35,12 +44,16 @@
 ## 📚 What's Different in This Fork?
 
 ### 1. **Ollama Backend Integration**
+
 - New `OllamaContentGenerator` that interfaces with Ollama's API
 - Uses Ollama's OpenAI-compatible `/v1/chat/completions` endpoint
 - Automatically converts between Gemini and Ollama message formats
 
 ### 2. **Prompt-Based Tool Calling**
-Since models like gemma2:27b don't have native tool calling support, Chadson uses a clever workaround:
+
+Since models like gemma2:27b don't have native tool calling support, Chadson
+uses a clever workaround:
+
 - Tool schemas are injected into the system prompt
 - Model responds with JSON tool calls in its output
 - Parser extracts and executes the tool calls
@@ -49,13 +62,17 @@ Since models like gemma2:27b don't have native tool calling support, Chadson use
 This works surprisingly well with larger models (27B+ parameters)!
 
 ### 3. **Tavily Search Instead of Google Search**
+
 - Replaced `google_web_search` (requires Gemini API) with `tavily_search`
-- Get a free Tavily API key at [tavily.com](https://tavily.com) (1,000 searches/month free)
+- Get a free Tavily API key at [tavily.com](https://tavily.com) (1,000
+  searches/month free)
 - Real-time web search that actually works with local models
 - Returns AI-optimized results with direct answers and source citations
 
 ### 4. **Simplified Setup**
+
 No Google account, no OAuth flow, no API management - just:
+
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
@@ -85,50 +102,106 @@ Learn all about Gemini CLI in our [documentation](https://geminicli.com/docs/).
 
 ### Pre-requisites
 
-- **Node.js** version 20 or higher
-- **Ollama** installed and running
-- A model pulled (e.g., `ollama pull gemma2:27b`)
-- macOS, Linux, or Windows
+- **Node.js** version 20 or higher (required - v18 won't work)
+- **Docker** with GPU support (NVIDIA GPU + NVIDIA Container Toolkit)
+- **NVIDIA GPU** with 8GB+ VRAM recommended
+- macOS, Linux, or Windows with WSL2
 
 ### Quick Install
 
-#### 1. Install Ollama
+#### 1. Install Node.js 20+
 
 ```bash
-# macOS/Linux
-curl -fsSL https://ollama.com/install.sh | sh
+# Using nvm (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+source ~/.bashrc  # or ~/.zshrc
+nvm install 20
+nvm use 20
+nvm alias default 20
 
-# Windows: Download from https://ollama.com/download
+# Verify
+node --version  # Should show v20.x.x
 ```
 
-#### 2. Pull a Model
+#### 2. Setup NVIDIA Docker (for GPU acceleration)
 
 ```bash
-# Recommended: gemma2:27b (good balance of size and capability)
-ollama pull gemma2:27b
+# Install NVIDIA Container Toolkit
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 
-# Alternative: llama3.1:8b (has native tool calling, smaller)
-ollama pull llama3.1:8b
+curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+sudo apt-get update
+sudo apt-get install -y nvidia-container-toolkit
+
+# Configure Docker
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+# Test GPU access
+docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi
 ```
 
-#### 3. Build Chadson
+#### 3. Clone and Build Chadson
 
 ```bash
 # Clone this repository
-git clone <this-repo-url>
-cd gemini-cli
+git clone https://github.com/kungfuflex/chadson.git
+cd chadson
 
-# Install dependencies and build
+# Install dependencies (will auto-build)
 npm install
-npm run build
-npm run bundle
 
-# Run Chadson
-./bundle/gemini.js
-
-# Or use the launcher script (sets Ollama environment variables)
-/home/ubuntu/llama/chadson
+# Bundle is created automatically
 ```
+
+#### 4. Start Ollama with GPU
+
+```bash
+# Start Ollama in Docker with GPU support
+docker-compose -f docker-compose.cuda.yaml up -d
+
+# Pull and create the chadson model
+docker exec ollama ollama pull gemma2:27b
+docker cp Modelfile ollama:/tmp/Modelfile
+docker exec ollama ollama create chadson -f /tmp/Modelfile
+
+# Verify it's running
+docker exec ollama ollama list
+```
+
+#### 5. Run Chadson
+
+```bash
+# Using the startup script (recommended)
+./start-chadson.sh
+
+# Or directly
+export OLLAMA_BASE_URL=http://localhost:11434
+export OLLAMA_MODEL=chadson
+node ./bundle/gemini.js
+
+# Or with npm link for global access
+npm link
+chadson
+```
+
+### Configuration Files
+
+Chadson automatically creates configuration in `~/.chadson/`:
+
+- **settings.json** - Auth type set to Ollama
+- **.env** - Ollama connection settings
+  ```bash
+  OLLAMA_BASE_URL=http://localhost:11434
+  OLLAMA_MODEL=chadson
+  GEMINI_DISABLE_UPDATE_CHECK=true
+  ```
+
+See [SETUP.md](./SETUP.md) for complete setup instructions and troubleshooting.
 
 ## Release Cadence and Tags
 
@@ -227,18 +300,20 @@ For real-time web search capabilities, get a free Tavily API key:
 export TAVILY_API_KEY="tvly-YOUR-KEY"
 ```
 
-Without this key, Chadson will still work but the `tavily_search` tool will return an error message.
+Without this key, Chadson will still work but the `tavily_search` tool will
+return an error message.
 
 ### Model Recommendations
 
-| Model | Size | Tool Calling | Speed | Recommended For |
-|-------|------|--------------|-------|-----------------|
-| **gemma2:27b** | ~16GB RAM | Prompt-based ⭐ | Medium | Best balance - recommended default |
-| **llama3.1:8b** | ~5GB RAM | Native ⭐⭐⭐ | Fast | Smaller machines, native tool support |
-| **llama3.1:70b** | ~40GB RAM | Native ⭐⭐⭐ | Slow | Maximum capability |
-| **qwen2.5:14b** | ~9GB RAM | Prompt-based ⭐⭐ | Medium | Good alternative to gemma2 |
+| Model            | Size      | Tool Calling      | Speed  | Recommended For                       |
+| ---------------- | --------- | ----------------- | ------ | ------------------------------------- |
+| **gemma2:27b**   | ~16GB RAM | Prompt-based ⭐   | Medium | Best balance - recommended default    |
+| **llama3.1:8b**  | ~5GB RAM  | Native ⭐⭐⭐     | Fast   | Smaller machines, native tool support |
+| **llama3.1:70b** | ~40GB RAM | Native ⭐⭐⭐     | Slow   | Maximum capability                    |
+| **qwen2.5:14b**  | ~9GB RAM  | Prompt-based ⭐⭐ | Medium | Good alternative to gemma2            |
 
 To change models:
+
 ```bash
 export OLLAMA_MODEL="llama3.1:8b"
 chadson
@@ -246,7 +321,9 @@ chadson
 
 ### Compatibility Note
 
-This fork still supports the original Gemini CLI authentication methods (Google OAuth, API keys, Vertex AI) if you want to use Google's models. Simply don't set `USE_OLLAMA=true` and follow the original authentication guide.
+This fork still supports the original Gemini CLI authentication methods (Google
+OAuth, API keys, Vertex AI) if you want to use Google's models. Simply don't set
+`USE_OLLAMA=true` and follow the original authentication guide.
 
 ## 🚀 Getting Started
 
@@ -368,7 +445,8 @@ chadson
   - [File System Operations](./docs/tools/file-system.md)
   - [Shell Commands](./docs/tools/shell.md)
   - [Web Fetch](./docs/tools/web-fetch.md)
-  - **Tavily Search** (replaces Google web search) - See `/home/ubuntu/llama/CHADSON_TAVILY_SEARCH.md`
+  - **Tavily Search** (replaces Google web search) - See
+    `/home/ubuntu/llama/CHADSON_TAVILY_SEARCH.md`
 - [**MCP Server Integration**](./docs/tools/mcp-server.md) - Extend with custom
   tools.
 - [**Custom Extensions**](./docs/extensions/index.md) - Build and share your own
@@ -377,9 +455,12 @@ chadson
 ### Chadson-Specific Documentation
 
 - **[CHADSON_README.md](../CHADSON_README.md)** - Complete Chadson user guide
-- **[CHADSON_SUCCESS.md](../CHADSON_SUCCESS.md)** - Implementation details and architecture
-- **[CHADSON_TAVILY_SEARCH.md](../CHADSON_TAVILY_SEARCH.md)** - Tavily search integration guide
-- **[CHADSON_WEB_SEARCH_STATUS.md](../CHADSON_WEB_SEARCH_STATUS.md)** - Why Google web search doesn't work with Ollama
+- **[CHADSON_SUCCESS.md](../CHADSON_SUCCESS.md)** - Implementation details and
+  architecture
+- **[CHADSON_TAVILY_SEARCH.md](../CHADSON_TAVILY_SEARCH.md)** - Tavily search
+  integration guide
+- **[CHADSON_WEB_SEARCH_STATUS.md](../CHADSON_WEB_SEARCH_STATUS.md)** - Why
+  Google web search doesn't work with Ollama
 
 ### Advanced Topics
 
@@ -452,20 +533,27 @@ See the [Uninstall Guide](docs/cli/uninstall.md) for removal instructions.
 
 ## 🎯 How Prompt-Based Tool Calling Works
 
-Since models like gemma2:27b don't have native tool calling, Chadson uses an innovative approach:
+Since models like gemma2:27b don't have native tool calling, Chadson uses an
+innovative approach:
 
-1. **Tool Schema Injection**: All available tool definitions are injected into the system prompt in JSON format
-2. **Model Response Parsing**: The model is instructed to respond with JSON when it wants to use a tool
-3. **Execution & Feedback**: Chadson parses the JSON, executes the tool, and feeds the result back
-4. **Iterative Loop**: The model can continue calling tools until it has the answer
+1. **Tool Schema Injection**: All available tool definitions are injected into
+   the system prompt in JSON format
+2. **Model Response Parsing**: The model is instructed to respond with JSON when
+   it wants to use a tool
+3. **Execution & Feedback**: Chadson parses the JSON, executes the tool, and
+   feeds the result back
+4. **Iterative Loop**: The model can continue calling tools until it has the
+   answer
 
-This works well with larger models (27B+) that have good instruction-following capabilities!
+This works well with larger models (27B+) that have good instruction-following
+capabilities!
 
 ## 🔧 Technical Architecture
 
 ### Key Components
 
-1. **OllamaContentGenerator** (`packages/core/src/core/ollamaContentGenerator.ts`)
+1. **OllamaContentGenerator**
+   (`packages/core/src/core/ollamaContentGenerator.ts`)
    - Implements the ContentGenerator interface
    - Converts between Gemini and Ollama message formats
    - Handles tool schema injection and response parsing
@@ -477,25 +565,27 @@ This works well with larger models (27B+) that have good instruction-following c
    - Returns AI-optimized results with citations
 
 3. **Tool Registry** (Modified)
-   - All existing Gemini CLI tools work: read_file, write_file, shell, glob, etc.
+   - All existing Gemini CLI tools work: read_file, write_file, shell, glob,
+     etc.
    - Added: tavily_search
    - Removed: google_web_search (requires Gemini API)
 
 ## 📊 Performance Comparison
 
-| Metric | Gemini CLI (Cloud) | Chadson (Local) |
-|--------|-------------------|-----------------|
-| **First Response** | ~1-2 sec | ~3-5 sec |
-| **Tool Calling Accuracy** | Native (99%+) | Prompt-based (~85-95%) |
-| **Privacy** | Cloud | 100% Local |
-| **Cost** | API usage | $0 (hardware only) |
-| **Internet Required** | Yes (API) | No (except web search) |
-| **Context Window** | 1M tokens | Model-dependent (128K typical) |
+| Metric                    | Gemini CLI (Cloud) | Chadson (Local)                |
+| ------------------------- | ------------------ | ------------------------------ |
+| **First Response**        | ~1-2 sec           | ~3-5 sec                       |
+| **Tool Calling Accuracy** | Native (99%+)      | Prompt-based (~85-95%)         |
+| **Privacy**               | Cloud              | 100% Local                     |
+| **Cost**                  | API usage          | $0 (hardware only)             |
+| **Internet Required**     | Yes (API)          | No (except web search)         |
+| **Context Window**        | 1M tokens          | Model-dependent (128K typical) |
 
 ## 📄 Legal
 
 - **License**: [Apache License 2.0](LICENSE)
-- **Original Project**: [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli)
+- **Original Project**:
+  [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli)
 - **Terms of Service**: [Terms & Privacy](./docs/tos-privacy.md)
 - **Security**: [Security Policy](SECURITY.md)
 
