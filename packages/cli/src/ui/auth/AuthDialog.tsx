@@ -42,6 +42,11 @@ export function AuthDialog({
 }: AuthDialogProps): React.JSX.Element {
   let items = [
     {
+      label: 'Use Ollama',
+      value: AuthType.USE_OLLAMA,
+      key: AuthType.USE_OLLAMA,
+    },
+    {
       label: 'Login with Google',
       value: AuthType.LOGIN_WITH_GOOGLE,
       key: AuthType.LOGIN_WITH_GOOGLE,
@@ -97,6 +102,10 @@ export function AuthDialog({
 
     if (defaultAuthType) {
       return item.value === defaultAuthType;
+    }
+
+    if (process.env['USE_OLLAMA'] === 'true') {
+      return item.value === AuthType.USE_OLLAMA;
     }
 
     if (process.env['GEMINI_API_KEY']) {

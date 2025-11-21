@@ -249,7 +249,7 @@ export class TavilySearchTool extends BaseDeclarativeTool<
     super(
       TAVILY_TOOL_NAME,
       TAVILY_TOOL_NAME,
-      'Search the web using Tavily API. Returns relevant, up-to-date search results with content snippets and direct answers. Requires TAVILY_API_KEY environment variable.',
+      'Search the web for current information, recent news, or real-time data that you do not already know. Use this when the user asks about recent events, current statistics, or information that requires up-to-date web sources. DO NOT use for general knowledge questions, simple math, or information you can answer directly. Returns relevant search results with content snippets and direct answers. Requires TAVILY_API_KEY environment variable.',
       'other' as any,
       {
         type: 'object',

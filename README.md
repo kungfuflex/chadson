@@ -208,14 +208,21 @@ Chadson uses Ollama instead of Google's Gemini API - no authentication required!
 
 ### Ollama Configuration (Default)
 
-```bash
-# Set Ollama backend (automatically set by launcher script)
-export USE_OLLAMA=true
-export OLLAMA_BASE_URL="http://localhost:11434"
-export OLLAMA_MODEL="gemma2:27b"
+Chadson automatically uses Ollama - no environment variables needed! Just run it:
 
-# Run Chadson
-chadson
+```bash
+# Run Chadson (automatically connects to Ollama at http://localhost:11434)
+./bundle/gemini.js
+```
+
+Optional environment variables for customization:
+
+```bash
+# Change the Ollama server URL (default: http://localhost:11434)
+export OLLAMA_BASE_URL="http://localhost:11434"
+
+# Change the default model (default: gemma2:27b)
+export OLLAMA_MODEL="gemma2:27b"
 ```
 
 ### Optional: Tavily Web Search
@@ -244,9 +251,9 @@ export OLLAMA_MODEL="llama3.1:8b"
 chadson
 ```
 
-### Compatibility Note
+### Note
 
-This fork still supports the original Gemini CLI authentication methods (Google OAuth, API keys, Vertex AI) if you want to use Google's models. Simply don't set `USE_OLLAMA=true` and follow the original authentication guide.
+Chadson is designed exclusively for Ollama. The original Gemini CLI authentication methods have been removed in favor of the simpler, privacy-focused local Ollama approach.
 
 ## 🚀 Getting Started
 
@@ -255,29 +262,25 @@ This fork still supports the original Gemini CLI authentication methods (Google 
 #### Start in current directory
 
 ```bash
-# Using the launcher script (recommended - sets environment variables)
-/home/ubuntu/llama/chadson
-
-# Or directly
-export USE_OLLAMA=true
+# Just run it - Ollama is automatically configured
 ./bundle/gemini.js
 ```
 
 #### Include multiple directories
 
 ```bash
-chadson --include-directories ../lib,../docs
+./bundle/gemini.js --include-directories ../lib,../docs
 ```
 
 #### Change Ollama model
 
 ```bash
-# Use a different model
+# Use a different model persistently
 export OLLAMA_MODEL="llama3.1:8b"
-chadson
+./bundle/gemini.js
 
-# Or temporarily
-OLLAMA_MODEL="qwen2.5:14b" chadson
+# Or temporarily for one session
+OLLAMA_MODEL="qwen2.5:14b" ./bundle/gemini.js
 ```
 
 #### Non-interactive mode for scripts
@@ -285,14 +288,14 @@ OLLAMA_MODEL="qwen2.5:14b" chadson
 Get a simple text response:
 
 ```bash
-chadson -p "Explain the architecture of this codebase"
+./bundle/gemini.js -p "Explain the architecture of this codebase"
 ```
 
 For more advanced scripting, including how to parse JSON and handle errors, use
 the `--output-format json` flag to get structured output:
 
 ```bash
-chadson -p "Explain the architecture of this codebase" --output-format json
+./bundle/gemini.js -p "Explain the architecture of this codebase" --output-format json
 ```
 
 For real-time event streaming (useful for monitoring long-running operations),

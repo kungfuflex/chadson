@@ -131,9 +131,22 @@ export class ClassifierStrategy implements RoutingStrategy {
 
   async route(
     context: RoutingContext,
-    _config: Config,
+    config: Config,
     baseLlmClient: BaseLlmClient,
   ): Promise<RoutingDecision | null> {
+    // For Ollama, skip the routing classifier and just use the configured model
+    // since we only have one model available
+    if (process.env['USE_OLLAMA'] === 'true') {
+      return {
+        model: config.getModel(),
+        metadata: {
+          source: 'Ollama-Direct',
+          latencyMs: 0,
+          reasoning: 'Using configured Ollama model directly (no routing needed)',
+        },
+      };
+    }
+
     const startTime = Date.now();
     try {
       let promptId = promptIdContext.getStore();

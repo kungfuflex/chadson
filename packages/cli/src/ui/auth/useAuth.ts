@@ -72,16 +72,22 @@ export const useAuthCommand = (settings: LoadedSettings, config: Config) => {
         return;
       }
 
-      const authType = settings.merged.security?.auth?.selectedType;
+      let authType = settings.merged.security?.auth?.selectedType;
+      
+      // Auto-detect and set auth type from environment if not configured
       if (!authType) {
-        if (process.env['GEMINI_API_KEY']) {
+        if (process.env['USE_OLLAMA'] === 'true') {
+          authType = AuthType.USE_OLLAMA;
+          // No need to persist this, we'll use it for this session
+        } else if (process.env['GEMINI_API_KEY']) {
           onAuthError(
             'Existing API key detected (GEMINI_API_KEY). Select "Gemini API Key" option to use it.',
           );
+          return;
         } else {
           onAuthError('No authentication method selected.');
+          return;
         }
-        return;
       }
 
       if (authType === AuthType.USE_GEMINI) {

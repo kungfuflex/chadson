@@ -76,7 +76,7 @@ export async function createContentGeneratorConfig(
     undefined;
   const googleCloudLocation = process.env['GOOGLE_CLOUD_LOCATION'] || undefined;
   const ollamaBaseUrl = process.env['OLLAMA_BASE_URL'] || 'http://localhost:11434';
-  const ollamaModel = process.env['OLLAMA_MODEL'] || 'gemma2:27b';
+  const ollamaModel = process.env['OLLAMA_MODEL'] || 'qwen2.5:14b';
 
   const contentGeneratorConfig: ContentGeneratorConfig = {
     authType,
@@ -136,7 +136,7 @@ export async function createContentGenerator(
       return new LoggingContentGenerator(
         new OllamaContentGenerator(
           config.ollamaBaseUrl || 'http://localhost:11434',
-          config.ollamaModel || 'gemma2:27b',
+          config.ollamaModel || 'qwen2.5:14b',
         ),
         gcConfig,
       );

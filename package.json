@@ -8,7 +8,6 @@
   "workspaces": [
     "packages/*"
   ],
-  "private": "true",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/google-gemini/gemini-cli.git"
@@ -69,8 +68,7 @@
     }
   },
   "bin": {
-    "chadson": "bundle/gemini.js",
-    "gemini": "bundle/gemini.js"
+    "chadson": "bundle/gemini.js"
   },
   "files": [
     "bundle/",

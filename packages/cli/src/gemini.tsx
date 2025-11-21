@@ -247,6 +247,9 @@ export async function startInteractiveUI(
 }
 
 export async function main() {
+  // Chadson is designed to work exclusively with Ollama
+  process.env['USE_OLLAMA'] = 'true';
+  
   setupUnhandledRejectionHandler();
   const settings = loadSettings();
   migrateDeprecatedSettings(

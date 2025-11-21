@@ -11,7 +11,7 @@ echo ""
 echo "Test 1: Asking model to use google_web_search"
 echo "----------------------------------------------"
 
-USE_OLLAMA=true OLLAMA_MODEL=gemma2:27b node bundle/gemini.js -p "Use the google_web_search tool to search for 'Python tutorials'. Output the exact JSON format for calling this tool." 2>&1 | grep -v "DeprecationWarning" | grep -v "Use.*trace"
+OLLAMA_MODEL=gemma2:27b node bundle/gemini.js -p "Use the google_web_search tool to search for 'Python tutorials'. Output the exact JSON format for calling this tool." 2>&1 | grep -v "DeprecationWarning" | grep -v "Use.*trace"
 
 echo ""
 echo ""
@@ -32,7 +32,7 @@ Output ONLY this JSON format:
 }
 EOF
 
-USE_OLLAMA=true OLLAMA_MODEL=gemma2:27b node bundle/gemini.js -p "$(cat /tmp/test-prompt.txt)" 2>&1 | grep -v "DeprecationWarning" | grep -v "Use.*trace"
+OLLAMA_MODEL=gemma2:27b node bundle/gemini.js -p "$(cat /tmp/test-prompt.txt)" 2>&1 | grep -v "DeprecationWarning" | grep -v "Use.*trace"
 
 rm /tmp/test-prompt.txt
 
