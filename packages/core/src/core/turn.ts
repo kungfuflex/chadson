@@ -20,6 +20,7 @@ import type {
 } from '../tools/tools.js';
 import type { ToolErrorType } from '../tools/tool-error.js';
 import { getResponseText } from '../utils/partUtils.js';
+import { getFunctionCalls } from '../utils/generateContentResponseUtilities.js';
 import { reportError } from '../utils/errorReporting.js';
 import {
   getErrorMessage,
@@ -289,7 +290,7 @@ export class Turn {
         }
 
         // Handle function calls (requesting tool execution)
-        const functionCalls = resp.functionCalls ?? [];
+        const functionCalls = getFunctionCalls(resp) ?? [];
         for (const fnCall of functionCalls) {
           const event = this.handlePendingFunctionCall(fnCall);
           if (event) {
