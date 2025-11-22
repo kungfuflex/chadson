@@ -236,19 +236,40 @@ export class OllamaContentGenerator implements ContentGenerator {
       parameters: fn.parameters || {},
     }));
 
+    // Build tool descriptions with required parameters clearly marked
+    const toolDescriptions = toolsDescription
+      .map((tool) => {
+        const props = tool.parameters.properties || {};
+        const required = tool.parameters.required || [];
+        const paramsList = Object.entries(props)
+          .map(([key, value]: [string, any]) => {
+            const isRequired = required.includes(key);
+            const desc = value.description || '';
+            return `    ${key}${isRequired ? ' (required)' : ' (optional)'}: ${value.type} - ${desc}`;
+          })
+          .join('\n');
+
+        return `${tool.name}: ${tool.description}
+  Parameters:
+${paramsList || '    (none)'}`;
+      })
+      .join('\n\n');
+
     const toolPrompt = `
 
-You have access to these tools. Only use them when the user explicitly requests that specific action:
+You have access to these tools. Only use them when the user explicitly requests an action:
 
-${toolsDescription.map(tool => `- ${tool.name}: ${tool.description}
-  Parameters: ${JSON.stringify(tool.parameters.properties || {}, null, 2)}`).join('\n')}
+${toolDescriptions}
 
-To call a tool, respond ONLY with JSON (no other text):
+To call a tool, respond with JSON using the EXACT parameter names shown above:
 \`\`\`json
-{"tool_call": {"name": "tool_name", "arguments": {"param": "value"}}}
+{"tool_call": {"name": "tool_name", "arguments": {"param_name": "value"}}}
 \`\`\`
 
-Otherwise, respond with normal text.
+IMPORTANT:
+- Use the exact parameter names from the tool definition (e.g., "dir_path" not "directory_path")
+- Include all required parameters
+- For questions or conversation, respond with normal text (no JSON)
 
 `;
 
@@ -260,23 +281,53 @@ Otherwise, respond with normal text.
    * Returns the extracted tool call or null if none found.
    * Only recognizes tool calls that match actual available tools.
    */
-  private parseToolCall(text: string, availableTools?: Tool[]): FunctionCall | null {
-    debugLogger.log(`[OllamaContentGenerator] parseToolCall input: ${text.substring(0, 200)}...`);
-    
+  private parseToolCall(
+    text: string,
+    availableTools?: Tool[],
+  ): FunctionCall | null {
+    debugLogger.log(
+      `[OllamaContentGenerator] parseToolCall input: ${text.substring(0, 200)}...`,
+    );
+
     // Try to find JSON in code blocks first
     const codeBlockMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
     let jsonText = codeBlockMatch ? codeBlockMatch[1] : null;
-    
-    debugLogger.log(`[OllamaContentGenerator] codeBlockMatch: ${jsonText ? 'found' : 'not found'}`);
+
+    debugLogger.log(
+      `[OllamaContentGenerator] codeBlockMatch: ${jsonText ? 'found' : 'not found'}`,
+    );
 
     // If no code block, try to extract JSON object from the text
     if (!jsonText) {
-      // Look for a JSON object containing "tool_call"
-      const jsonMatch = text.match(/\{[\s\S]*?"tool_call"[\s\S]*?\}/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[0];
-        debugLogger.log(`[OllamaContentGenerator] jsonMatch found: ${jsonText.substring(0, 100)}`);
-      } else {
+      // Look for a JSON object containing "tool_call" - use a more sophisticated approach
+      // to handle nested objects properly
+      const toolCallIndex = text.indexOf('"tool_call"');
+      if (toolCallIndex !== -1) {
+        // Find the opening brace before "tool_call"
+        let openBraceIndex = text.lastIndexOf('{', toolCallIndex);
+        if (openBraceIndex !== -1) {
+          // Count braces to find the matching closing brace
+          let braceCount = 0;
+          let endIndex = openBraceIndex;
+          for (let i = openBraceIndex; i < text.length; i++) {
+            if (text[i] === '{') braceCount++;
+            else if (text[i] === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                endIndex = i + 1;
+                break;
+              }
+            }
+          }
+          if (braceCount === 0) {
+            jsonText = text.substring(openBraceIndex, endIndex);
+            debugLogger.log(
+              `[OllamaContentGenerator] jsonMatch found: ${jsonText.substring(0, 100)}`,
+            );
+          }
+        }
+      }
+      if (!jsonText) {
         debugLogger.log(`[OllamaContentGenerator] No JSON match found in text`);
       }
     }
@@ -287,31 +338,44 @@ Otherwise, respond with normal text.
 
     try {
       const parsed = JSON.parse(jsonText);
-      debugLogger.log(`[OllamaContentGenerator] Parsed JSON: ${JSON.stringify(parsed)}`);
-      
+      debugLogger.log(
+        `[OllamaContentGenerator] Parsed JSON: ${JSON.stringify(parsed)}`,
+      );
+
       if (parsed.tool_call && parsed.tool_call.name) {
         const toolName = parsed.tool_call.name;
-        
+
         // Validate that the tool actually exists
         if (availableTools && availableTools.length > 0) {
           const firstTool = availableTools[0];
-          if ('functionDeclarations' in firstTool && firstTool.functionDeclarations) {
-            const validToolNames = firstTool.functionDeclarations.map(fn => fn.name);
+          if (
+            'functionDeclarations' in firstTool &&
+            firstTool.functionDeclarations
+          ) {
+            const validToolNames = firstTool.functionDeclarations.map(
+              (fn) => fn.name,
+            );
             if (!validToolNames.includes(toolName)) {
-              debugLogger.log(`[OllamaContentGenerator] Tool "${toolName}" not found in available tools: ${validToolNames.join(', ')}`);
+              debugLogger.log(
+                `[OllamaContentGenerator] Tool "${toolName}" not found in available tools: ${validToolNames.join(', ')}`,
+              );
               return null;
             }
           }
         }
-        
+
         const functionCall = {
           name: toolName,
           args: parsed.tool_call.arguments || {},
         };
-        debugLogger.log(`[OllamaContentGenerator] Extracted tool call: ${JSON.stringify(functionCall)}`);
+        debugLogger.log(
+          `[OllamaContentGenerator] Extracted tool call: ${JSON.stringify(functionCall)}`,
+        );
         return functionCall;
       } else {
-        debugLogger.log(`[OllamaContentGenerator] JSON does not contain valid tool_call structure`);
+        debugLogger.log(
+          `[OllamaContentGenerator] JSON does not contain valid tool_call structure`,
+        );
       }
     } catch (e) {
       debugLogger.log(`[OllamaContentGenerator] JSON parse error: ${e}`);
